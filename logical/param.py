@@ -39,10 +39,13 @@ option_sgn_dict = {
 
 param_toom_dict = {
     "init_data_array": np.array(()),
+    "periodic_bool":False
 }
 
 option_toom_dict = {
-    "shuffling": ""
+    "shuffling": "None",
+    "intensity":1,
+    "periodic_bool":False
 }
 
 param_shearing_dict = {

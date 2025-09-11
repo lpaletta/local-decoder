@@ -2,7 +2,7 @@ import numpy as np
 
 from toom_utils import * # Import utility functions specific to Toom's rule and error handling
 
-def SHEARING(param, option, view={"record_var" : "Standard"}):
+def SHEARING(param, option, view={"record_var" : "Logical"}):
 
 ############################### Initialisation ################################
     
@@ -25,6 +25,10 @@ def SHEARING(param, option, view={"record_var" : "Standard"}):
 
     # Record variable controls output format (logical or data array)
     record_var = view["record_var"]
+    if record_var == "Trajectory":
+        dt = view["dt"]
+        t_array = np.array([t for t in range(0,T,dt)]).astype(np.int32)
+        configuration_list = []
 
     # Initialize data array based on selected configuration
     if init_var == "Zeros":
@@ -65,9 +69,15 @@ def SHEARING(param, option, view={"record_var" : "Standard"}):
             data_array = SWAP(data_array)
 
 ################################# Output ######################################
+            
+        if record_var == "Trajectory":
+            if t in t_array:
+                configuration_list.append(data_array)
 
     # Return either logical outcome (majority vote) or final data array
     if record_var == "Logical":
         return(int(np.sum(data_array)>(L*h/2)))
     elif record_var == "Data":
         return(data_array)
+    elif record_var == "Trajectory":
+        return(np.stack(configuration_list))

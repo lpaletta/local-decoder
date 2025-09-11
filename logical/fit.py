@@ -28,6 +28,7 @@ def fit_pL_single_alg(df,pth_guess,plim_fit):
 
     df.loc[:,"A"] = A
     df.loc[:,"pth"] = pth
+    print(pth)
     for i in range(len(n_list)):
         df.loc[df["i_n"]==i,"gamma_n"] = param_opt_value[i]
 

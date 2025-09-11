@@ -48,16 +48,31 @@ def plot_f_E(df,fit_bool,key,plim_fit,path_fig):
             elif name > 6:
                 ax.errorbar(X,Y,yerr=S,fmt="s",color=colors[i],capsize=2.5,markersize=4,label="$n=%i$"%name)
                 i+=1
+        elif alg_name == "Harrington":
+            if name == 9:
+                ax.errorbar(X,Y,yerr=S,fmt="X",color=colors[0],capsize=2.5,markersize=5,label="$n=%i$"%name)
+            elif name == 27:
+                ax.errorbar(X,Y,yerr=S,fmt="X",color=colors[2],capsize=2.5,markersize=5,label="$n=%i$"%name)
+            elif name == 81:
+                ax.errorbar(X,Y,yerr=S,fmt="X",color=colors[4],capsize=2.5,markersize=5,label="$n=%i$"%name)
 
     if fit_bool:
         i=0
         for name, group in df_plot.groupby("n"):
             group = group[group["error_rate"]<plim_fit]
-            if name <= 6:
-                ax.plot(group["error_rate"].to_numpy(), group[key].to_numpy(),color=grey, linestyle='dotted')
-            elif name > 6:
-                ax.plot(group["error_rate"].to_numpy(), group[key].to_numpy(),color=colors[i], linestyle='dotted')
-                i+=1
+            if alg_name == "Harrington":
+                if name == 9:
+                    ax.plot(group["error_rate"].to_numpy(), group[key].to_numpy(),color=colors[0], linestyle='dotted')
+                elif name == 27:
+                    ax.plot(group["error_rate"].to_numpy(), group[key].to_numpy(),color=colors[2], linestyle='dotted')
+                elif name == 81:
+                    ax.plot(group["error_rate"].to_numpy(), group[key].to_numpy(),color=colors[4], linestyle='dotted')
+            else:
+                if name <= 6:
+                    ax.plot(group["error_rate"].to_numpy(), group[key].to_numpy(),color=grey, linestyle='dotted')
+                elif name > 6:
+                    ax.plot(group["error_rate"].to_numpy(), group[key].to_numpy(),color=colors[i], linestyle='dotted')
+                    i+=1
 
     ax.set_xlabel("physical error ($\\varepsilon = \\varepsilon_d = \\varepsilon_m$)",fontsize=7.5,labelpad=0.5)
     ax.set_ylabel("logical error ($\\varepsilon_L$)",fontsize=7.5,labelpad=0.5)
@@ -73,9 +88,7 @@ def plot_f_E(df,fit_bool,key,plim_fit,path_fig):
 
     ax.grid(False)
 
-    ax.legend(loc="upper left",frameon=False,handletextpad=0.1,labelspacing=0.25,borderpad=0.25,fontsize=7)
-    
-    fig.tight_layout(pad=0.1, w_pad=0.1, h_pad=0.1)
+    ax.legend(loc="upper left",frameon=False,handletextpad=0.1,labelspacing=0.25,borderpad=0.25,fontsize=7.5)
 
     if not fit_bool:
         plt.savefig(path_fig+"/logical_f_E_wo_fit.pdf")
@@ -85,7 +98,7 @@ def plot_f_E(df,fit_bool,key,plim_fit,path_fig):
 
 def plot_gamma_n(df,fit_bool,key,path_fig):
 
-    fig, ax = plt.subplots(1,1,figsize=(1.9,2.4))
+    fig, ax = plt.subplots(1,1,figsize=(1.7,2.4))
 
     plt.gca().set_prop_cycle(plt.rcParams['axes.prop_cycle'])
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
@@ -98,8 +111,7 @@ def plot_gamma_n(df,fit_bool,key,path_fig):
             if name_alg=="Signal":
 
                 n_reduced_list = list(set(group_alg["n"].to_list()))
-                group_alg = group_alg[group_alg["n"].isin(n_reduced_list)] 
-
+                group_alg = group_alg[group_alg["n"].isin(n_reduced_list)]
                 X = group_alg["n"].to_numpy()
                 Y = group_alg["gamma_n"].to_numpy()
                 ax.scatter(X,Y,facecolors=blue, edgecolors=blue,marker='o',s=14,linewidths=1,zorder=-10,label="SSR")
@@ -115,6 +127,12 @@ def plot_gamma_n(df,fit_bool,key,path_fig):
                 X = group_alg["n"].to_numpy()
                 Y = group_alg["gamma_n"].to_numpy()
                 ax.scatter(X,Y,facecolors=yellow, edgecolors=yellow,marker='^',s=18,linewidths=1,zorder=-15,label="Shear.")
+                ax.plot(X,Y,color=yellow,linewidth=1,zorder=-15)
+            elif name_alg=="Harrington":
+
+                X = group_alg["n"].to_numpy()
+                Y = group_alg["gamma_n"].to_numpy()
+                ax.scatter(X,Y,facecolors=yellow, edgecolors=yellow,marker='p',s=18,linewidths=1,zorder=-15,label="Shear.")
                 ax.plot(X,Y,color=yellow,linewidth=1,zorder=-15)
 
     X = np.linspace(0,100,50)
@@ -140,19 +158,17 @@ def plot_gamma_n(df,fit_bool,key,path_fig):
     ax.set_ylabel("effective distance ($\\gamma_n$)",labelpad=0.5,fontsize=7.5)
     ax.set_ylim(0,20)
 
-    ax.tick_params(axis='both', which='major', labelsize=7)
-    ax.tick_params(axis='both', which='minor', labelsize=7)
+    ax.tick_params(axis='both', which='major', labelsize=6)
+    ax.tick_params(axis='both', which='minor', labelsize=6)
 
     ax.grid(False)
 
     try:
         handles, labels = plt.gca().get_legend_handles_labels()
         order=[1,0,2,3]
-        ax.legend([handles[idx] for idx in order],[labels[idx] for idx in order],loc="lower right",frameon=False,fontsize=7)
+        ax.legend([handles[idx] for idx in order],[labels[idx] for idx in order],loc="lower right",frameon=False,fontsize=7.5)
     except:
-        ax.legend(loc="lower right",frameon=False,fontsize=7)
-
-    fig.tight_layout(pad=0.4, w_pad=0.1, h_pad=0.1)
+        ax.legend(loc="lower right",frameon=False,fontsize=7.5)
 
     if not fit_bool:
         plt.savefig(path_fig+"/gamma_f_n_wo_fit.pdf")
@@ -251,17 +267,15 @@ def plot_estimate_f_n(df,df_proof,path_fig):
     ax.set_xlim(10**(-14),10**(-6))
     ax.set_ylim(0,100)
 
-    ax.tick_params(axis='both', which='major', labelsize=7)
-    ax.tick_params(axis='both', which='minor', labelsize=7)
+    ax.tick_params(axis='both', which='major', labelsize=6)
+    ax.tick_params(axis='both', which='minor', labelsize=6)
 
     ax.yaxis.set_label_position("right")
     ax.yaxis.tick_right()
 
     ax.grid(False)
 
-    ax.legend(loc="upper right",fontsize=7,frameon=False)
-
-    fig.tight_layout(pad=0.1, w_pad=0.1, h_pad=0.1)
+    ax.legend(loc="upper right",fontsize=7.5,frameon=False)
 
     plt.savefig(path_fig+"/logical_estimate_f_n.pdf")
     

@@ -11,6 +11,13 @@ light_grey = to_rgb("#F1F1F1")
 
 from scipy.interpolate import make_interp_spline, BSpline
 
+    #fig, ax = plt.subplots(1,1,figsize=(1.7,2.4))
+    #ax.set_xlabel("number of qubits ($n$)",labelpad=0.5,fontsize=7.5)
+    #ax.set_ylabel("effective distance ($\\gamma_n$)",labelpad=0.5,fontsize=7.5)
+    #ax.tick_params(axis='both', which='major', labelsize=6)
+    #ax.tick_params(axis='both', which='minor', labelsize=6)
+    #ax.legend(loc="lower right",frameon=False,fontsize=7)
+
 def plot_f_T(df,fit_bool,path_fig):
 
     plt.gca().set_prop_cycle(plt.rcParams['axes.prop_cycle'])
@@ -20,7 +27,7 @@ def plot_f_T(df,fit_bool,path_fig):
     df_plot = df_plot.dropna(subset="pL")
 
     for name_e, group_e in df_plot.groupby("error_rate"):
-        fig, ax = plt.subplots(1,1,figsize=(2.5,2))
+        fig, ax = plt.subplots(1,1,figsize=(2.4,1.5))
 
         i=0
 
@@ -46,15 +53,16 @@ def plot_f_T(df,fit_bool,path_fig):
         ax.set_yscale("log")
         ax.set_ylim(10**(-10),10**(-4))
 
-        ax.set_xlabel("simulation time ($\\tau$)",fontsize=7,labelpad=0.5)
-        ax.set_ylabel("normalized logical flip ($P_L(\\tau)/\\tau$)",fontsize=7,labelpad=0.5)
+        ax.set_xlabel("simulation time ($\\tau$)",fontsize=7.5,labelpad=0.5)
+        #ax.set_ylabel("normalized logical flip ($P(\\tau)/\\tau$)",fontsize=7.5,labelpad=0.5)
+        ax.set_ylabel("$P(\\tau)/\\tau$",fontsize=7.5,labelpad=5,rotation=-90)
 
-        ax.tick_params(axis='both', which='major', labelsize=7)
-        ax.tick_params(axis='both', which='minor', labelsize=7)
+        ax.tick_params(axis='both', which='major', labelsize=6)
+        ax.tick_params(axis='both', which='minor', labelsize=6)
+        ax.yaxis.set_label_position("right")
+        ax.yaxis.tick_right()
 
         ax.grid(False)
-
-        fig.tight_layout(pad=0.1,w_pad=0.1, h_pad=0.1)
 
         if fit_bool:
             plt.savefig(path_fig+"/logical_f_T_e={}.pdf".format(name_e))
@@ -64,7 +72,7 @@ def plot_f_T(df,fit_bool,path_fig):
 
 def plot_transient_f_n(df,path_fig):
 
-    fig, ax = plt.subplots(1,1,figsize=(1.5,2))
+    fig, ax = plt.subplots(1,1,figsize=(2.4,0.8))
 
     df_plot = df.copy()
     df_plot = df_plot[["n","T_steady","T_steady_fit"]]
@@ -83,17 +91,17 @@ def plot_transient_f_n(df,path_fig):
     ax.set_xlim(0,50)
     ax.set_ylim(0,100)
 
-    ax.set_xlabel("number of qubits (n)",fontsize=7,labelpad=0.5)
-    ax.set_ylabel("cut-off time ($\\tau_n$)",fontsize=7,labelpad=5,rotation=-90)
+    ax.set_xlabel("number of qubits ($n$)",fontsize=7.5,labelpad=0.5)
+    ax.set_ylabel("cut-off time ($\\tau_n$)",fontsize=7.5,labelpad=11,rotation=-90)
 
-    ax.tick_params(axis='both', which='major', labelsize=7)
-    ax.tick_params(axis='both', which='minor', labelsize=7)
+    ax.tick_params(axis='both', which='major', labelsize=6)
+    ax.tick_params(axis='both', which='minor', labelsize=6)
+    #ax.xaxis.set_label_position("top")
+    #ax.xaxis.tick_top()
     ax.yaxis.set_label_position("right")
     ax.yaxis.tick_right()
 
     ax.grid(False)
-
-    fig.tight_layout(pad=0.1, w_pad=0.1, h_pad=0.1)
 
     plt.savefig(path_fig+"/transient_f_n.pdf")
     plt.close()

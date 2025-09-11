@@ -7,12 +7,13 @@ from import_data import *
 from fit import *
 from plot import *
 
-path, data_name, proof_name = "repetition/logical/data/", "data.csv", "proof.csv"
-path_fig = "repetition/logical/fig/"
+path, data_name, proof_name = "logical/data/", "data.csv", "proof.csv"
+path_fig = "logical/fig/"
 
 dict_pth_guess = {"Signal":0.08,
                 "Toom":0.08,
-                "Shearing":0.08}
+                "Shearing":0.08,
+                "Harrington":0.03}
 
 dict_plim_fit = dict_pth_guess
 for key in dict_plim_fit:
@@ -46,6 +47,7 @@ for alg_name in list(set(df["alg_name"].to_list())):
 df_algs_fit = pd.DataFrame()
 
 for alg_name in list(set(df["alg_name"].to_list())):
+    print("Fit {}".format(alg_name))
     df_single_alg = df[df["alg_name"]==alg_name]
     df_single_alg_fit = fit_pL_single_alg(df_single_alg,dict_pth_guess[alg_name],dict_plim_fit[alg_name])
     df_algs_fit = pd.concat([df_algs_fit,df_single_alg_fit],ignore_index=True)

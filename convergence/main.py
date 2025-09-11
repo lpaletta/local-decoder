@@ -7,8 +7,8 @@ from import_data import *
 from analysis import *
 from plot import *
 
-path, data_name = "repetition/convergence/data/", "data.csv"
-path_fig = "repetition/convergence/fig/"
+path, data_name = "convergence/data/", "data.csv"
+path_fig = "convergence/fig/"
 
 df = import_data(path, data_name, "Convergence")
 df = get_end_transient(df)

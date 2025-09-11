@@ -7,8 +7,8 @@ from import_data import *
 from fit import *
 from plot import *
 
-path, data_name = "repetition/measurement/data/", "data.csv"
-path_fig = "repetition/measurement/fig/"
+path, data_name = "measurement/data/", "data.csv"
+path_fig = "measurement/fig/"
 
 df = import_data(path, data_name, "Measurement")
 

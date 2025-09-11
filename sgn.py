@@ -36,6 +36,12 @@ def SIGNAL(param, option, view={"record_var" : "Logical"}):
     if record_var == "Stack":
         M = view["M"]
         stack_distribution_array = np.zeros(M).astype(np.int32)
+    if record_var == "Trajectory":
+        dt = view["dt"]
+        t_array = np.array([t for t in range(0,T,dt)]).astype(np.int32)
+        configuration_list = []
+    if record_var == "View":
+        global_hist_array = np.zeros((6,1,L)).astype(np.int8)
 
     # Initialize data array based on initial condition
     if init_var == "Zeros":
@@ -62,9 +68,6 @@ def SIGNAL(param, option, view={"record_var" : "Logical"}):
         anti_signal_array = np.zeros((1,L)).astype(np.int8)
         stack_array = np.zeros((1,L)).astype(np.int32)
 
-    if record_var == "Trajectory":
-        global_hist_array = np.zeros((6,1,L)).astype(np.int8)
-
     # Main simulation loop
     for t in range(T):
 
@@ -81,7 +84,7 @@ def SIGNAL(param, option, view={"record_var" : "Logical"}):
 ################################## Update rules ################################
         
         # Track system history if trajectory recording is enabled
-        if record_var == "Trajectory":
+        if record_var == "View":
             global_hist_array = update_global_hist(data_array,defect_array,forward_signal_array,backward_signal_array,anti_signal_array,stack_array,global_hist_array)
 
         # Instantaneous correction
@@ -125,6 +128,9 @@ def SIGNAL(param, option, view={"record_var" : "Logical"}):
             if t in t_array:
                 idx = np.where(t_array == t)[0]
                 logical_array[idx] = int(np.sum(data_array)>(L*1/2))
+        if record_var == "Trajectory":
+            if t in t_array:
+                configuration_list.append(data_array)
 
     # Return appropriate output based on record_var setting
     if record_var == "Logical":
@@ -133,5 +139,7 @@ def SIGNAL(param, option, view={"record_var" : "Logical"}):
         return(stack_distribution_array)
     elif record_var == "Poisson":
         return(logical_array)
-    elif record_var == "Trajectory":
+    elif record_var == "View":
         return(global_hist_array)
+    elif record_var == "Trajectory":
+        return(np.stack(configuration_list))

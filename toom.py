@@ -2,7 +2,7 @@ import numpy as np
 
 from toom_utils import * # Import utility functions specific to Toom's rule and error handling
 
-def TOOM(param, option, view={"record_var" : "Standard"}):
+def TOOM(param, option, view={"record_var" : "Logical"}):
 
 ############################### Initialisation ################################
 
@@ -21,12 +21,17 @@ def TOOM(param, option, view={"record_var" : "Standard"}):
     meas_error_bool = option["meas_error_bool"]
     shuffling = option["shuffling"]
     intensity = option["intensity"]
+    periodic_bool = option["periodic_bool"]
 
     # Boolean initial data configuration
     init_var = param["init_var"]
 
     # Record variable controls output format (logical or data array)
     record_var = view["record_var"]
+    if record_var == "Trajectory":
+        dt = view["dt"]
+        t_array = np.array([t for t in range(0,T,dt)]).astype(np.int32)
+        configuration_list = []
 
     # Initialize data array based on selected configuration
     if init_var == "Zeros":
@@ -59,41 +64,50 @@ def TOOM(param, option, view={"record_var" : "Standard"}):
         syndrome_hor,syndrome_vert = get_syndrome(data_array,meas_error_bool,meas_error_rate,rng)
 
 ################################ Correction ###################################
-
-        if shuffling == "None":
-            # Switch correction direction periodically based on log-scaled time steps
-            direction = Tooms_direction_list[(t//np.ceil(np.log(L)).astype(int))%4]
-            new_correction_array = get_correction_non_periodic(syndrome_hor,syndrome_vert,direction)
-            # Apply correction to data array
+        
+        if periodic_bool == True:
+            new_correction_array = get_correction_periodic(syndrome_hor,syndrome_vert)
             data_array = (data_array + new_correction_array)%2
 
-        elif shuffling in ["SN","SNA","SND","Global"]:
-
-            if t%2 == 0:
+        if periodic_bool == False:
+            if shuffling == "None":
+                # Switch correction direction periodically based on log-scaled time steps
                 direction = Tooms_direction_list[(t//np.ceil(np.log(L)).astype(int))%4]
                 new_correction_array = get_correction_non_periodic(syndrome_hor,syndrome_vert,direction)
-
+                # Apply correction to data array
                 data_array = (data_array + new_correction_array)%2
 
-            elif t%2 == 1:
-                if shuffling == "SN":
-                    for i in range(intensity):
-                        data_array = SN(data_array,"None",S%4)
-                        S += 1
-                elif shuffling == "SNA":
-                    for i in range(intensity):
-                        data_array = SNA(data_array,"None",S%4)
-                        S += 1
-                elif shuffling == "SND":
-                    for i in range(intensity):
-                        data_array = SND(data_array,"None",S%8)
-                        S += 1
-                elif shuffling == "Global":
-                    for i in range(intensity):
-                        data_array = Global(data_array,rng)
-                        S += 1
+            elif shuffling in ["SN","SNA","SND","Global"]:
+
+                if t%2 == 0:
+                    direction = Tooms_direction_list[(t//np.ceil(np.log(L)).astype(int))%4]
+                    new_correction_array = get_correction_non_periodic(syndrome_hor,syndrome_vert,direction)
+
+                    data_array = (data_array + new_correction_array)%2
+
+                elif t%2 == 1:
+                    if shuffling == "SN":
+                        for i in range(intensity):
+                            data_array = SN(data_array,"None",S%4)
+                            S += 1
+                    elif shuffling == "SNA":
+                        for i in range(intensity):
+                            data_array = SNA(data_array,"None",S%4)
+                            S += 1
+                    elif shuffling == "SND":
+                        for i in range(intensity):
+                            data_array = SND(data_array,"None",S%8)
+                            S += 1
+                    elif shuffling == "Global":
+                        for i in range(intensity):
+                            data_array = Global(data_array,rng)
+                            S += 1
 
 ################################# Output ######################################
+        
+        if record_var == "Trajectory":
+            if t in t_array:
+                configuration_list.append(data_array)
 
     # Return either logical outcome (majority vote) or final data array
     if record_var == "Logical":
@@ -101,3 +115,5 @@ def TOOM(param, option, view={"record_var" : "Standard"}):
         return(logical)
     elif record_var == "Data":
         return(data_array)
+    elif record_var == "Trajectory":
+        return(np.stack(configuration_list))

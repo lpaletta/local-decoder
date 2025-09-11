@@ -7,8 +7,8 @@ from import_data import *
 from analysis import *
 from plot import *
 
-path, data_name = "repetition/stack/data/", "data.csv"
-path_fig = "repetition/stack/fig/"
+path, data_name = "stack/data/", "data.csv"
+path_fig = "stack/fig/"
 
 df = import_data(path, data_name, "Stack")
 df = get_integral(df)
