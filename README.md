@@ -1,4 +1,4 @@
-# Code for "High-performance local automaton decoders for defect matching in 1D"
+# Code for "High-performance local decoders for defect matching in 1D"
 
 This repository presents the code used for the numerical simulations in the paper "Local automaton decoder for defect matching in 1D". The code is organized into the six foolowing folders.
 
