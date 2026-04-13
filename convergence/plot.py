@@ -1,107 +1,157 @@
 import numpy as np
-
 import matplotlib.pyplot as plt
-from matplotlib.colors import to_rgb
+import matplotlib.ticker as ticker
 
-# use custom style
-plt.style.use('rgplot')
+# ---------------------------------------------------------------------
+# Plot style
+# ---------------------------------------------------------------------
 
-grey = to_rgb("#D6D6D6")
-light_grey = to_rgb("#F1F1F1")
+plt.style.use("rgplot")
 
-from scipy.interpolate import make_interp_spline, BSpline
+# ---------------------------------------------------------------------
+# Figure / font constants
+# ---------------------------------------------------------------------
 
-    #fig, ax = plt.subplots(1,1,figsize=(1.7,2.4))
-    #ax.set_xlabel("number of qubits ($n$)",labelpad=0.5,fontsize=7.5)
-    #ax.set_ylabel("effective distance ($\\gamma_n$)",labelpad=0.5,fontsize=7.5)
-    #ax.tick_params(axis='both', which='major', labelsize=6)
-    #ax.tick_params(axis='both', which='minor', labelsize=6)
-    #ax.legend(loc="lower right",frameon=False,fontsize=7)
+FIGSIZE_CONVERGENCE = (2.6, 2.0)
+FIGSIZE_CUTOFF = (2.0, 2.0)
 
-def plot_f_T(df,fit_bool,path_fig):
+LABEL_FONTSIZE = 7
+TICK_FONTSIZE = 5.5
 
-    plt.gca().set_prop_cycle(plt.rcParams['axes.prop_cycle'])
-    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+AXWIDTH = 0.6
+LINEWIDTH = 1.2
+SCATTER_SIZE = 10
 
-    df_plot = df.copy()
-    df_plot = df_plot.dropna(subset="pL")
+# ---------------------------------------------------------------------
+# Axis limits
+# ---------------------------------------------------------------------
 
-    for name_e, group_e in df_plot.groupby("error_rate"):
-        fig, ax = plt.subplots(1,1,figsize=(2.4,1.5))
+X_CONVERGENCE_LIM = (0, 200)
+Y_CONVERGENCE_LIM = (1e-10, 1e-3)
 
-        i=0
+X_CUTOFF_LIM = (0, 55)
+Y_CUTOFF_LIM = (0, 100)
 
-        for n, group_n in group_e.groupby("n"):
+# ---------------------------------------------------------------------
+# Colors
+# ---------------------------------------------------------------------
 
-            group_n_subset = group_n[group_n["T"].isin([2,3]+[t for t in range(1,200,3)])]
-            X = group_n_subset["T"].to_numpy()
-            Y = group_n_subset["pL"].to_numpy()
-            S = group_n_subset["sigma"].to_numpy()
+colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
-            if n == 35:
-                ax.errorbar(X,Y,yerr=S,capsize=1,markersize=2,fmt='o',color=grey,label="$n=%i$"%n)
-            else:
-                ax.errorbar(X,Y,yerr=S,capsize=1,markersize=2,fmt='o',color=colors[i],label="$n=%i$"%n)
-                i+=1
+GREY = "#D6D6D6"
+MAGENTA = "#CE93D8"
+APPLE = "#A8D5A2"
+PINK = "#FADADD"
 
-            if fit_bool:
-                Y = group_n_subset["pL_fit"].to_numpy()
-                ax.plot(X,Y,linestyle="dotted",color=colors[i])
+BLUE, RED, GREEN, YELLOW = colors[:4]
 
-        ax.set_xlim(0,200)
+DISTANCE_TO_COLOR = {
+    5: GREY,
+    9: BLUE,
+    15: RED,
+    25: GREEN,
+    35: PINK,
+    50: YELLOW,
+    75: APPLE,
+    100: MAGENTA
+}
 
-        ax.set_yscale("log")
-        ax.set_ylim(10**(-10),10**(-4))
+# ---------------------------------------------------------------------
+# Plots
+# ---------------------------------------------------------------------
 
-        ax.set_xlabel("simulation time ($\\tau$)",fontsize=7.5,labelpad=0.5)
-        #ax.set_ylabel("normalized logical flip ($P(\\tau)/\\tau$)",fontsize=7.5,labelpad=0.5)
-        ax.set_ylabel("$P(\\tau)/\\tau$",fontsize=7.5,labelpad=5,rotation=-90)
+def plot_convergence(df, path):
+    fig, ax = plt.subplots(figsize=FIGSIZE_CONVERGENCE)
+    ax.errorbar([],[],[], label="")
 
-        ax.tick_params(axis='both', which='major', labelsize=6)
-        ax.tick_params(axis='both', which='minor', labelsize=6)
-        ax.yaxis.set_label_position("right")
-        ax.yaxis.tick_right()
+    for distance, group in df.groupby("n"):
+        group = group[group["positive"] < group["number_of_runs"] / 2]
 
-        ax.grid(False)
+        # ax.plot(group["time_run"],
+        #     group["cummulative_error"] / group["time_run"],
+        #     color=DISTANCE_TO_COLOR[distance],
+        #     label=rf"$d={distance}$")
+        # ax.fill_between(
+        #     group["time_run"],
+        #     group["cummulative_error"] / group["time_run"] - 1.96 * group["sigma"] / group["time_run"],
+        #     group["cummulative_error"] / group["time_run"] + 1.96 * group["sigma"] / group["time_run"],
+        #     color=DISTANCE_TO_COLOR[distance],
+        #     alpha=0.3,
+        # )
 
-        if fit_bool:
-            plt.savefig(path_fig+"/logical_f_T_e={}.pdf".format(name_e))
-        else:
-            plt.savefig(path_fig+"/logical_f_T_e={}_wo_fit.pdf".format(name_e))
-        plt.close()
+        ax.errorbar(
+            group["T"],
+            group["pL"],
+            yerr=2 * group["sigma"],
+            fmt="o",
+            markersize=2,
+            color=DISTANCE_TO_COLOR[distance],
+            label=rf"$n={distance}$",
+        )
 
-def plot_transient_f_n(df,path_fig):
+    ax.set_xlabel(r"simulation time ($\tau$)", fontsize=LABEL_FONTSIZE)
+    ax.set_ylabel(r"$P_L(\tau)/\tau$", fontsize=LABEL_FONTSIZE)
 
-    fig, ax = plt.subplots(1,1,figsize=(2.4,0.8))
+    ax.set_yscale("log")
+    ax.set_xlim(*X_CONVERGENCE_LIM)
+    ax.set_ylim(*Y_CONVERGENCE_LIM)
 
-    df_plot = df.copy()
-    df_plot = df_plot[["n","T_steady","T_steady_fit"]]
-    df_plot = df_plot.drop_duplicates()
+    ax.tick_params(labelsize=TICK_FONTSIZE, width=AXWIDTH)
+    ax.yaxis.set_minor_formatter(ticker.NullFormatter())
 
-    X = df_plot["n"].to_numpy()
-    Y = df_plot["T_steady"].to_numpy()
+    # Grid (as in original)
+    ax.grid(which='major', color=GREY, linestyle='-', linewidth=AXWIDTH/2, alpha=0.2)
+    ax.grid(which='minor', color=GREY, linestyle='-', linewidth=AXWIDTH/3, alpha=0.2)
+    #ax.grid(False)
 
-    ax.scatter(X,Y,s=10,color="black",facecolors='black',marker='D')
+    # ax.legend(
+    #     loc="lower right",
+    #     frameon=False,
+    #     fontsize=LABEL_FONTSIZE,
+    #     ncol=2,
+    #     columnspacing=0.5,
+    # )
 
-    X_fit = df_plot[df_plot["n"]>=10]["n"].to_numpy()
-    Y_fit = df_plot[df_plot["n"]>=10]["T_steady_fit"].to_numpy()
+    for spine in ax.spines.values():
+        spine.set_linewidth(AXWIDTH)
 
-    ax.plot(X_fit,Y_fit,color="black",linestyle="dotted",zorder=-1)
+    fig.tight_layout()
+    plt.savefig(f"{path}/convergence.pdf")
+    plt.close()
 
-    ax.set_xlim(0,50)
-    ax.set_ylim(0,100)
 
-    ax.set_xlabel("number of qubits ($n$)",fontsize=7.5,labelpad=0.5)
-    ax.set_ylabel("cut-off time ($\\tau_n$)",fontsize=7.5,labelpad=11,rotation=-90)
+def plot_cutoff(df, path):
+    fig, ax = plt.subplots(figsize=FIGSIZE_CUTOFF)
 
-    ax.tick_params(axis='both', which='major', labelsize=6)
-    ax.tick_params(axis='both', which='minor', labelsize=6)
-    #ax.xaxis.set_label_position("top")
-    #ax.xaxis.tick_top()
-    ax.yaxis.set_label_position("right")
+    df_plot = df[["n", "time_cutoff", "time_cutoff_fit"]].drop_duplicates()
+
+    ax.scatter(
+        df_plot["n"],
+        df_plot["time_cutoff"],
+        marker="o",
+        s=SCATTER_SIZE,
+        color=BLUE,
+        zorder=6
+    )
+
+    ax.set_xlabel(r"number of qubits ($n$)", fontsize=LABEL_FONTSIZE)
+    ax.set_ylabel(r"cut-off time ($\tau_n$)", fontsize=LABEL_FONTSIZE,rotation=270,labelpad=10,)
+
+    ax.set_xlim(*X_CUTOFF_LIM)
+    ax.set_ylim(*Y_CUTOFF_LIM)
+
+    ax.tick_params(labelsize=TICK_FONTSIZE, width=AXWIDTH)
     ax.yaxis.tick_right()
+    ax.yaxis.set_label_position("right")
 
-    ax.grid(False)
+    # Grid (as in original)
+    ax.grid(which='major', color=GREY, linestyle='-', linewidth=AXWIDTH/2, alpha=0.2)
+    ax.grid(which='minor', color=GREY, linestyle='-', linewidth=AXWIDTH/3, alpha=0.2)
+    #ax.grid(False)
 
-    plt.savefig(path_fig+"/transient_f_n.pdf")
+    for spine in ax.spines.values():
+        spine.set_linewidth(AXWIDTH)
+
+    fig.tight_layout()
+    plt.savefig(f"{path}/cutoff.pdf")
     plt.close()

@@ -1,30 +1,41 @@
-import sys
 import os
+import sys
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# ---------------------------------------------------------------------
+# Path setup
+# ---------------------------------------------------------------------
+
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(PROJECT_ROOT)
 
 from import_data import *
-from analysis import *
 from plot import *
-
-path, data_name = "convergence/data/", "data.csv"
-path_fig = "convergence/fig/"
-
-df = import_data(path, data_name, "Convergence")
-df = get_end_transient(df)
-A, B = fit_end_transient(df[df["n"]>=10])
-df = add_fit_transient(df,A,B)
-
-plot_f_T(df,False,path_fig)
-plot_transient_f_n(df,path_fig)
+from fit import *
 
 
+# ---------------------------------------------------------------------
+# Global configuration
+# ---------------------------------------------------------------------
 
+DATA_PATH = "convergence/data/"
+FIG_PATH = "convergence/fig/"
 
+DATA_FILE = "data.csv"
 
+# ---------------------------------------------------------------------
+# Load data
+# ---------------------------------------------------------------------
 
+df = import_data(DATA_PATH, DATA_FILE, "Convergence")
 
+# Distances used for plotting
+D_PLOT_ALL = df["n"].unique()
 
+# -------------------------------------------------------------
+# Plot jump probability (selected distances)
+# -------------------------------------------------------------
 
-
-
+plot_convergence(df, path=FIG_PATH)
+get_cutoff(df)
+fit_cutoff(df)
+plot_cutoff(df, path=FIG_PATH)
